@@ -1,5 +1,5 @@
 module.exports = {
     account     : require('./account.model'),
-    order       : require('./order.model'),
-    inventory   : require('./inventory.model')
+    message       : require('./message.model'),
+    group   : require('./group.model')
 };

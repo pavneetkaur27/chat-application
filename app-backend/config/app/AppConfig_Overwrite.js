@@ -8,6 +8,7 @@ exports.server = {
     REDIS_HOST                              : process.env.REDIS_HOST || 'localhost',
     REDIS_PORT                              : Number(process.env.REDIS_PORT) || 6379,
     ORIGIN_SECURE                           : Number(process.env.ORIGIN_SECURE) || true,
+    REDIS_PASSWORD                          : '',
     REDIS_TTL                               : Number(process.env.REDIS_TTL) || 260,
     ADMIN_TOKEN_PRIVATE_KEY                 : 'sdbchjsbvhdfv',
     RABBITMQ_HOST                           : 'localhost',

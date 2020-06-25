@@ -1,3 +1,3 @@
 module.exports = {
-    'maindata'         : require('./main'),
+    'main'         : require('./main'),
 };

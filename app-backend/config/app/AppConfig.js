@@ -8,6 +8,7 @@ exports.server = {
     REDIS_PASSWORD                          : process.env.REDIS_PASSWORD || '',
     REDIS_HOST                              : process.env.REDIS_HOST || 'localhost',
     REDIS_PORT                              : Number(process.env.REDIS_PORT) || 6379,
+    REDIS_PASSWORD                          : '',
     ORIGIN_SECURE                           : Number(process.env.ORIGIN_SECURE) || true,
     REDIS_TTL                               : Number(process.env.REDIS_TTL) || 260,
     ADMIN_TOKEN_PRIVATE_KEY                 : 'sdbchjsbvhdfv',

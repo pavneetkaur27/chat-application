@@ -14,24 +14,26 @@ const constants             = helper.Constants;
 const errorCodes            = helper.Errors;
 const sendError 		    = httpResponse.sendError;
 const sendSuccess			= httpResponse.sendSuccess;
+const controller            = require('../controller');
+const userController        = controller.main.maindata;
 var io;
 
 var redis_client             = redis.createClient(configs.REDIS_PORT,configs.REDIS_HOST);
-redis_client.auth(configs.REDIS_PASS);
-redis_client.select(configs.REDIS_CHAT_DB, function() { /* ... */ });
+redis_client.auth(configs.REDIS_PASSWORD);
+// redis_client.select(configs.REDIS_CHAT_DB, function() { /* ... */ });
 
 redis_client.on("error", function (err) {
     console.log("Error " + err);
 });
 
 var redis_publisher         = redis.createClient(configs.REDIS_PORT,configs.REDIS_HOST);
-redis_publisher.auth(configs.REDIS_PASS);
+redis_publisher.auth(configs.REDIS_PASSWORD);
 
 var redis_subscriber        = redis.createClient(configs.REDIS_PORT,configs.REDIS_HOST);
-redis_subscriber.auth(configs.REDIS_PASS);
+redis_subscriber.auth(configs.REDIS_PASSWORD);
 
 module.exports.listen = function(app) {
-   
+    
     io = socketio(app,{
         adapter: redisAdapter({ pubClient: redis_publisher, subClient: redis_subscriber })
     });
@@ -39,7 +41,18 @@ module.exports.listen = function(app) {
    
     io.on('connection',function(socket){
         console.log("Sssssssssssssss");
-        console.log(socket);
+        // console.log(socket);
+        console.log(socket.id);
+        socket.on('joingroup', ( data,cb ) =>{
+            console.log(data);
+            userController.checkGroupMember(data , (err , resp ) => {
+                if(err){
+                    console.log(err);
+                    return cb({ success : false , errMsg : err });
+                }
+                console.log("tesssssssssssss");
+            });
+        })
         // handle_initialize(socket);
        
     });

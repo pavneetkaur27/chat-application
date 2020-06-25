@@ -2,8 +2,6 @@ const mongoose              = require('mongoose');
 const request 				= require('request');
 const bvalid                = require("bvalid");
 const redis                 = require('redis');
-const socketio              = require('socket.io');
-const redisAdapter          = require('socket.io-redis');
 const mongo                 = require('../../services').Mongo;
 const to                    = require('../../services').Utility.to;
 const helper                = require('../../helper');
@@ -17,29 +15,13 @@ const JWT 					= utils.jwt;
 const sendError 		    = httpResponse.sendError;
 const sendSuccess			= httpResponse.sendSuccess;
 
-var redis_client             = redis.createClient(configs.REDIS_PORT,configs.REDIS_HOST);
-redis_client.auth(configs.REDIS_PASS);
-redis_client.select(configs.REDIS_CHAT_DB, function() { /* ... */ });
-
-redis_client.on("error", function (err) {
-    console.log("Error " + err);
-});
-
-var redis_publisher         = redis.createClient(configs.REDIS_PORT,configs.REDIS_HOST);
-redis_publisher.auth(configs.REDIS_PASS);
-
-var redis_subscriber        = redis.createClient(configs.REDIS_PORT,configs.REDIS_HOST);
-redis_subscriber.auth(configs.REDIS_PASS);
 
 
-
-
-exports.signUp = function(req,res,next){
+exports.joinGroup = async function(req,res,next){
     
-    req.checkBody('eml',errorCodes.invalid_parameters[1]).notEmpty();
-    req.checkBody('pwd',errorCodes.invalid_parameters[1]).notEmpty();
-    req.checkBody('cpwd',errorCodes.invalid_parameters[1]).notEmpty();
-
+    req.checkBody('name',errorCodes.invalid_parameters[1]).notEmpty();
+    req.checkBody('groupname',errorCodes.invalid_parameters[1]).notEmpty();
+  
 	if(req.validationErrors()){
        return sendError(res,req.validationErrors(),"invalid_parameters",constants.HTTP_STATUS.BAD_REQUEST);
     }
@@ -52,44 +34,73 @@ exports.signUp = function(req,res,next){
         return sendError(res,msg,msg,constants.HTTP_STATUS.BAD_REQUEST);
     }
 
-    if(!bvalid.isEmail(req.body.eml)){
-        return invaliParms("invalid_email");
-    }
-    if(!(bvalid.isString(req.body.pwd) && bvalid.isString(req.body.cpwd))){
-        return invaliParms();
-    }
-    if(req.body.pwd != req.body.cpwd){
-        return invaliParms("password_not_match");
+    var data = req.body;
+
+    if(!bvalid.isString(data.name)){
+        return invaliParms("invalid_name");
     }
 
-    mongo.Model('account').findOne({
-        'eml' : req.body.eml.trim().toLowerCase()
-    },function(err0,resp0){
-        if(err0){
-            return sendError(res,"server_error","server_error");
-        }
-        if(resp0){
-            return sendError(res,"account_already_exists","account_already_exists");
-        }
-        return saveNew();
-    })
+    if(!bvalid.isString(data.groupname)){
+        return invaliParms("invalid_group_name");
+    }
+
+    var account_qstr = {
+        name : data.name,
+        act  : true,
+    }
+    var account_proj = {};
+    var account_option = {};
+
+    var [err0, account] = await to(mongo.Model('account').findOne(account_qstr,account_proj,account_option)); 
+    if(err0){
+        return sendError(res,err0,"server_error");
+    }
+
+    if(!account){
+        return saveNew();    
+    }else{
+        return groupCheck(account);
+    }
+
     function saveNew(){
-        mongo.Model('account').insert({
-            'eml' : req.body.eml,
-            'pwd' : req.body.pwd
-        },function(err0,resp0){
+        mongo.Model('account').insert(account_qstr,function(err0,resp0){
             if(err0){
                 return sendError(res,"server_error","server_error");
             }
-            var encrypt_aid = crypt.TwoWayEncode(resp0._id.toString(),configs.TWO_WAY_CRYPT_SECRET);
-            var ob = {
-                'id' : resp0._id,
-                'eml' : resp0.eml,
-                'role' : 1
-            };
-            var jtoken = JWT.sign(ob,configs.JWT_PRIVATE_KEY,60*60*24*30);
-            return sendSuccess(res,{a_tkn : jtoken });
+           
+            return groupCheck(resp0);
         })
+    }
+    async function groupCheck(account){
+
+        var group_qstr = {
+            g_name  :  data.groupname,
+            act     : true,
+        }
+        var group_proj = {};
+        var group_option = {};
+
+        var [err1, group] = await to(mongo.Model('group').findOne(group_qstr, group_proj, group_option)); 
+        if(err1){
+            return sendError(res,err0,"server_error");
+        }
+    
+        if(group){
+            return sendSuccess(res,{
+                aid : account._id,
+                gid : group._id
+             });
+        }else{
+            mongo.Model('group').insert(group_qstr,function(err2,resp){
+                if(err2){
+                    return sendError(res,"server_error","server_error");
+                }
+                return sendSuccess(res,{
+                    aid : account._id,
+                    gid : resp._id
+                 });
+            })
+        }
     }
 }
 
@@ -151,44 +162,56 @@ exports.signIn = async function(req,res,next){
 
 
 
-exports.fetchProducts = async function(req,res,next){
-    req.checkBody('limit',errorCodes.invalid_parameters[1]).notEmpty();
-    req.checkBody('pageno',errorCodes.invalid_parameters[1]).notEmpty();
-
-    if(req.validationErrors()){
-  		return sendError(res,req.validationErrors(),"invalid_parameters",constants.HTTP_STATUS.BAD_REQUEST);
-    }
+exports.checkGroupMember = async function(data,cb){
+    console.log("tess");
 
     try{
-        var data = req.body;
+        console.log(data);
+        
+        function invaliParms(msg,flag){
+            msg = msg ? msg : 'invalid_parameters';
+            if(flag){
+                return cb("invalid_parameters",null);
+            }
+            return cb(msg);
+        }
 
-        var query_string = {
-            act : true,
+        if(!bvalid.isString(data.name)){
+            return invaliParms("invalid_name");
+        }
+    
+        if(!bvalid.isString(data.groupname)){
+            return invaliParms("invalid_group_name");
+        }
+
+        var account_qstr = {
+            // name : 
+            // act  : true,
         }
 
         var [err0, total_prod_count] = await to(mongo.Model('inventory').count(query_string)); 
         if(err0){
             return sendError(res,err0,"server_error");
         }
-        var proj    = {};
+        // var proj    = {};
 
-        //fetching limited data at a time(pagination)
-        var option  = {
-            limit : data.limit,
-            skip  : (data.pageno -1) * data.limit
-        }
+        // //fetching limited data at a time(pagination)
+        // var option  = {
+        //     limit : data.limit,
+        //     skip  : (data.pageno -1) * data.limit
+        // }
 
-        var [err,products] = await to(mongo.Model('inventory').find(query_string, proj, option)); 
-        // console.log(products);
-        if(err){
-            return sendError(res,err,"server_error");
-        }
-        return sendSuccess(res, {
-            products        : products,
-            total_products  :  total_prod_count
-        })
+        // var [err,products] = await to(mongo.Model('inventory').find(query_string, proj, option)); 
+        // // console.log(products);
+        // if(err){
+        //     return sendError(res,err,"server_error");
+        // }
+        // return sendSuccess(res, {
+        //     products        : products,
+        //     total_products  :  total_prod_count
+        // })
     }catch(err){
-        return sendError(res,err,"server_error");
+        return {err :err};
     }
 }
   
