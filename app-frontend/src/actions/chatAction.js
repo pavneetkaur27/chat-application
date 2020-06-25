@@ -40,26 +40,22 @@ const handleResponseErrorCase1 = (data)=>{
 }
 
 
-export const joinGroup = (eml , pass, cpass) => dispatch => {
+export const joinGroup = (data) => dispatch => {
   
   var requestObj = {
     method: 'POST',
     data: {
-      eml  : eml,
-      pwd  : pass,
-      cpwd : cpass 
+        name : data.name ,
+        groupname : data.groupname
     },
-    url: API_ENDPOINT + '/user/sign_up',
+    url: API_ENDPOINT + '/user/joingrp',
   };
   startLoader(dispatch,1);
   
-  axios(requestObj).then((response) => {
+  return axios(requestObj).then((response) => {
     stopLoader(dispatch);
     if (response && response.data.success && response.data) {
-      if(response.data.data.a_tkn){
-        cookies.set('ou_at', response.data.data.a_tkn,{ path: '/' });
-      }
-      return window.location.replace('/');
+      return response;
     } else {
       return dispatch({
         type: "SHOW_NOTIFY", payload: {

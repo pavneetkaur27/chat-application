@@ -3,6 +3,7 @@ import {connect} from "react-redux";
 import { Switch, Route,withRouter } from 'react-router-dom';
 import OrganisationLogIn from './orgLogin';
 import JoinGroup from './joinGroup';
+import ChatGroup from './chatGroup';
 import Header from './partials/header';
 import Alert from './shared/Alert';
 import Loader from './shared/Loader';
@@ -39,6 +40,7 @@ class OrgHome extends Component {
             <Loader loading={this.props.loading}/>
             <Switch>
                 <Route exact path="/" render={() => <JoinGroup /> }/>
+                <Route exact path="/chatgroup" render={() => <ChatGroup /> }/>
                 <Route exact path="/login" render={() => <OrganisationLogIn /> }/>  
               </Switch>
           </div>

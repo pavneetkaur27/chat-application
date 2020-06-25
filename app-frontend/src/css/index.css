@@ -660,6 +660,61 @@ html::-webkit-scrollbar-thumb {
     padding: 16px;
 }
 
+
+.chat-box-container{
+    position: relative;
+    margin-top: 48px!important;
+    /* padding: 32px; */
+    background-color: rgb(202, 217, 240);
+    height: calc(100vh - 106px);
+}
+
+
+.send-message-container{
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 64px;
+    width: 100%;
+    background-color: #fff;
+    padding: 8px 16px;
+}
+
+.ipt-send-msg{
+    width: 85%;
+    height: 42px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: 0.5px solid rgba(33, 42, 57, 0.5);
+}
+
+.btn-send-msg{
+    width: 13%;
+    height: 42px;
+    margin-left: 12px;
+    background-color: #212A39;
+    font-weight: 600;
+    color: white;
+    border-radius: 4px;
+    border: 0.5px solid rgba(33, 42, 57, 0.5);
+}
+
+.message-container{
+    height: calc(100vh - 228px);
+    overflow-y: scroll;
+    overflow-x: hidden;
+    padding: 16px;
+}
+
+.group-name-section{
+     background-color: #212A39;
+    font-weight: 600;
+    color: white;
+    height: 48px;
+    padding: 8px 16px;
+    font-size: 22px;
+}
+
 @media (min-width : 576px){
     .org-login-card-container{
         min-width: 570px;
