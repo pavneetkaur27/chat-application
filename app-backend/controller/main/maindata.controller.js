@@ -1,6 +1,7 @@
 const mongoose              = require('mongoose');
 const request 				= require('request');
 const bvalid                = require("bvalid");
+const moment                 = require('moment');
 const redis                 = require('redis');
 const mongo                 = require('../../services').Mongo;
 const to                    = require('../../services').Utility.to;
@@ -10,8 +11,6 @@ const configs               = require('../../config/app').server;
 const httpResponse          = helper.HttpResponse;
 const constants             = helper.Constants;
 const errorCodes            = helper.Errors;
-const crypt 				= utils.Crypt;
-const JWT 					= utils.jwt;
 const sendError 		    = httpResponse.sendError;
 const sendSuccess			= httpResponse.sendSuccess;
 
@@ -57,12 +56,12 @@ exports.joinGroup = async function(req,res,next){
     }
 
     if(!account){
-        return saveNew();    
+        return saveNewAccount();    
     }else{
         return groupCheck(account);
     }
 
-    function saveNew(){
+    function saveNewAccount(){
         mongo.Model('account').insert(account_qstr,function(err0,resp0){
             if(err0){
                 return sendError(res,"server_error","server_error");
@@ -86,88 +85,153 @@ exports.joinGroup = async function(req,res,next){
         }
     
         if(group){
-            return sendSuccess(res,{
-                aid : account._id,
-                gid : group._id
-             });
+            return addGroupMember(account,group);
         }else{
             mongo.Model('group').insert(group_qstr,function(err2,resp){
                 if(err2){
                     return sendError(res,"server_error","server_error");
                 }
+                return addGroupMember(account,resp);
+            })
+        }
+    }
+
+    async function addGroupMember(account,group){
+        
+        var grpmem_qstr = {
+            aid : account._id ,
+            gid : group._id,
+            act : true,
+        }
+        var grpmem_proj = {is_blocked : 1};
+        var grpmem_option = {};
+
+        var [err1, groupmember] = await to(mongo.Model('groupmember').findOne(grpmem_qstr, grpmem_proj, grpmem_option)); 
+        if(err1){
+            return sendError(res,err0,"server_error");
+        }
+    
+        if(groupmember){
+            return sendSuccess(res,{
+                aid : account._id,
+                gid : group._id,
+                groupmember : groupmember
+            });
+        }else{
+            grpmem_qstr.is_blocked = false;
+            mongo.Model('groupmember').insert(grpmem_qstr,function(err2,resp){
+                if(err2){
+                    return sendError(res,"server_error","server_error");
+                }
                 return sendSuccess(res,{
                     aid : account._id,
-                    gid : resp._id
-                 });
+                    gid : group._id,
+                    groupmember : resp
+                });
             })
         }
     }
 }
 
-exports.signIn = async function(req,res,next){
-    req.checkBody('eml',errorCodes.invalid_parameters[1]).notEmpty();
-    req.checkBody('pwd',errorCodes.invalid_parameters[1]).notEmpty();
+exports.fetchChatHistory = async function(req,res, next){
+    req.checkBody('aid',errorCodes.invalid_parameters[1]).notEmpty();
+    req.checkBody('gid',errorCodes.invalid_parameters[1]).notEmpty();
+    req.checkBody('lmt',errorCodes.invalid_parameters[1]).notEmpty();
+    req.checkBody('tim',errorCodes.invalid_parameters[1]).notEmpty();
 
-    if(req.validationErrors()){
-  		return sendError(res,req.validationErrors(),"invalid_parameters",constants.HTTP_STATUS.BAD_REQUEST);
+	if(req.validationErrors()){
+       return sendError(res,req.validationErrors(),"invalid_parameters",constants.HTTP_STATUS.BAD_REQUEST);
     }
-    
+
+    let data = req.body;
+
     function invaliParms(msg,flag){
         msg = msg ? msg : 'invalid_parameters';
         if(flag){
-            return sendError(res,msg,"invalid_parameters",constants.HTTP_STATUS.BAD_REQUEST,true);
+            return cb("invalid_parameters",null);
         }
-        return sendError(res,msg,msg,constants.HTTP_STATUS.BAD_REQUEST);
+        return cb(msg);
     }
 
-    if(!bvalid.isEmail(req.body.eml)){
-        return invaliParms("invalid_email");
+    if(!utils.util.validMongoId(data.aid)){
+        return invaliParms();
     }
 
-    if(!bvalid.isString(req.body.pwd)){
-        return invaliParms("invalid_type_of_password");
+    if(!utils.util.validMongoId(data.gid)){
+        return invaliParms();
     }
-
-    mongo.Model('account').findOne({
-        'eml' : req.body.eml,
-        'act' : true
-    },{
-        pwd : 1
-    },function(err0,resp0){
-        if(err0){
-            return sendError(res,"server_error","server_error");
-        }
-        if(!resp0){
-            return invaliParms("account_not_found");
-        }
-       
-        try{
-            var isValid = crypt.decode(req.body.pwd , resp0.pwd); 
-        }catch(err){
-            return sendError(res,err,"server_error");
-        }
-        if(isValid){
-            var ob = {
-                'id' : resp0._id,
-                'eml' : resp0.eml,
-                'role' : 1
-            };
-            let jtoken  = JWT.sign(ob,configs.JWT_PRIVATE_KEY,60*60*24*30);
-            return sendSuccess(res,{a_tkn : jtoken });
-        } else {
-            return sendError(res,"password_not_match","password_not_match");
-        } 
-    })
-}
-
-
-
-exports.checkGroupMember = async function(data,cb){
-    console.log("tess");
 
     try{
-        console.log(data);
+        console.log("tes");
+        var message_qstr = {
+            createdAt : {$lt : data.tim},
+            gid : data.gid,
+            msg_del : false,
+            act : true,
+        }
+        var message_proj   = {};
         
+        var message_option = {
+            sort : {
+                createdAt : -1 
+            },
+            limit : data.lmt
+        };
+
+        var [err1, messages] = await to(mongo.Model('message').find(message_qstr, message_proj, message_option)); 
+        if(err1){
+            return sendError(res,err0,"server_error");
+        }
+        
+        if(messages.length == 0 ){
+            return sendSuccess(res,{
+                allmessages : messages
+            });
+        }
+
+        let aids_arr = [];
+        for(let i = 0 ; i < messages.length ; i++){
+            if(aids_arr.indexOf(messages[i].aid+'') < 0){
+                aids_arr.push(messages[i].aid+'');
+            }
+        }
+        console.log(aids_arr);
+        var account_qstr = {
+            _id : {$in : aids_arr},
+            act : true,
+        }
+        var account_proj   = {};
+        
+        var account_option = {};
+
+        var [err1, accounts] = await to(mongo.Model('account').find(account_qstr, account_proj, account_option)); 
+
+        let accounts_obj = {};
+        for(let i = 0 ;i < accounts.length ; i++){
+            if(!accounts_obj[accounts[i]._id+'']){
+                accounts_obj[accounts[i]._id+''] = {};
+            }
+            accounts_obj[accounts[i]._id+''] = accounts[i];
+        }
+
+        for(let i = 0; i < messages.length ; i++){
+            if(accounts_obj[messages[i].aid+'']){
+                messages[i].account = accounts_obj[messages[i].aid+''];
+            }
+            
+        }
+        return sendSuccess(res,{
+            allmessages : messages
+        });
+
+    }catch(err){
+        return {err :err};
+    }    
+}
+
+exports.checkGroupMember = async function(data,cb){
+  
+    try{
         function invaliParms(msg,flag){
             msg = msg ? msg : 'invalid_parameters';
             if(flag){
@@ -175,43 +239,175 @@ exports.checkGroupMember = async function(data,cb){
             }
             return cb(msg);
         }
-
-        if(!bvalid.isString(data.name)){
-            return invaliParms("invalid_name");
+    
+        if(!utils.util.validMongoId(data.aid)){
+            return invaliParms();
         }
     
-        if(!bvalid.isString(data.groupname)){
-            return invaliParms("invalid_group_name");
+        if(!utils.util.validMongoId(data.gid)){
+            return invaliParms();
         }
 
         var account_qstr = {
-            // name : 
-            // act  : true,
+            _id  : data.aid,
+            act  : true,
         }
-
-        var [err0, total_prod_count] = await to(mongo.Model('inventory').count(query_string)); 
+        var account_proj = {};
+        var account_option = {};
+    
+        var [err0, account] = await to(mongo.Model('account').findOne(account_qstr,account_proj,account_option)); 
         if(err0){
-            return sendError(res,err0,"server_error");
+            return cb("server_error");
         }
-        // var proj    = {};
+    
+        if(!account){
+            return cb("Account doesnot exist");
+        }else{
+            
+            var group_qstr = {
+                _id  : data.gid,
+                act  : true,
+            }
+            var group_proj = {};
+            var group_option = {};
+    
+            var [err1, group] = await to(mongo.Model('group').findOne(group_qstr, group_proj, group_option)); 
+            if(err1){
+                return cb("server_error");
+            }
+        
+            if(!group){
+                return cb("Group doesn't exist");
+            }else{
+                var grpmem_qstr = {
+                    aid : data.aid ,
+                    gid : data.gid,
+                    act : true,
+                }
+                var grpmem_proj = {is_blocked : 1};
+                var grpmem_option = {};
+        
+                var [err1, groupmember] = await to(mongo.Model('groupmember').findOne(grpmem_qstr, grpmem_proj, grpmem_option)); 
+                if(err1){
+                    return cb("server_error");
+                }
 
-        // //fetching limited data at a time(pagination)
-        // var option  = {
-        //     limit : data.limit,
-        //     skip  : (data.pageno -1) * data.limit
-        // }
-
-        // var [err,products] = await to(mongo.Model('inventory').find(query_string, proj, option)); 
-        // // console.log(products);
-        // if(err){
-        //     return sendError(res,err,"server_error");
-        // }
-        // return sendSuccess(res, {
-        //     products        : products,
-        //     total_products  :  total_prod_count
-        // })
+                if(!groupmember){
+                    return cb("This account is not a groupmember");
+                }
+                return cb(null,true);
+            }
+        }
     }catch(err){
         return {err :err};
     }
 }
   
+
+exports.addNewMessage = async function(data,cb){
+    try{
+
+        function invaliParms(msg,flag){
+            msg = msg ? msg : 'invalid_parameters';
+            if(flag){
+                return cb("invalid_parameters",null);
+            }
+            return cb(msg);
+        }
+    
+        if(!utils.util.validMongoId(data.aid)){
+            return invaliParms();
+        }
+    
+        if(!utils.util.validMongoId(data.gid)){
+            return invaliParms();
+        }
+
+        if(!bvalid.isString(data.msg)){
+            return invaliParms();
+        }
+
+        var account_qstr = {
+            _id  : data.aid,
+            act  : true,
+        }
+        var account_proj = {};
+        var account_option = {};
+    
+        var [err0, account] = await to(mongo.Model('account').findOne(account_qstr,account_proj,account_option)); 
+        if(err0){
+            return cb("server_error");
+        }
+      
+        if(!account){
+            return cb("Account doesnot exist");
+        }else{
+            
+            var group_qstr = {
+                _id  : data.gid,
+                act  : true,
+            }
+            var group_proj = {};
+            var group_option = {};
+    
+            var [err1, group] = await to(mongo.Model('group').findOne(group_qstr, group_proj, group_option)); 
+            if(err1){
+                return cb("server_error");
+            }
+        
+            if(!group){
+                return cb("Group doesn't exist");
+            }else{
+                var grpmem_qstr = {
+                    aid : data.aid ,
+                    gid : data.gid,
+                    act : true,
+                }
+                var grpmem_proj = {is_blocked : 1};
+                var grpmem_option = {};
+        
+                var [err1, groupmember] = await to(mongo.Model('groupmember').findOne(grpmem_qstr, grpmem_proj, grpmem_option)); 
+                if(err1){
+                    return cb("server_error");
+                }
+
+                if(!groupmember){
+                    return cb("This account is not a groupmember");
+                }
+                
+                if(groupmember.is_blocked){
+                    return cb("User is blocked to message in this group");
+                }else{
+                    var message_qstr = {
+                        aid : data.aid ,
+                        gid : data.gid,
+                        is_admin : data.isAdmin ? data.isAdmin : false,
+                        msg_type : 1,                          //text
+                        msg : data.msg,
+                        act : true,
+                    }
+                    
+                    var [err1, newmessage] = await to(mongo.Model('message').insert(message_qstr)); 
+                   
+                    if(err1){
+                        return cb("server_error");
+                    }
+                    
+                    var [err1, msg] = await to(mongo.Model('message').findOne({_id : newmessage._id})); 
+                    
+                    msg.account =  account;
+                    let message = [];
+                    message.push(msg);
+
+                    let resp_obj = {
+                        message : message,
+                        success : true
+                    }
+                    return cb(null, resp_obj);
+                }
+            }
+        }
+    }catch(err){
+        return {err :err};
+    }
+}

@@ -1,6 +1,6 @@
 const mongoose             = require('mongoose');
 
-const model_name = 'inventory';
+const model_name = 'groupmember';
 
 const schema = mongoose.Schema({
 
@@ -19,6 +19,12 @@ const schema = mongoose.Schema({
     socket_id : {
         type : String
     },
+
+    is_blocked : {
+        type : Boolean,
+        required : true
+    },
+
     // active attribute for soft deletion 
     act : {
         type : Boolean,
@@ -37,6 +43,3 @@ schema.statics = {
 
 
 module.exports = mongoose.model(model_name,schema,model_name);
-
-
-// db.inventory.insert({product_nm : "Kurti",product_desc : "tetsingggggggg",actual_price : 30000, offered_price: 20000, discount: 10000, total_stock:10, is_product_avail: true, one_time_order_quant: 3,act: true })

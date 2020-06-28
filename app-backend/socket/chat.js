@@ -19,7 +19,7 @@ const userController        = controller.main.maindata;
 var io;
 
 var redis_client             = redis.createClient(configs.REDIS_PORT,configs.REDIS_HOST);
-redis_client.auth(configs.REDIS_PASSWORD);
+// redis_client.auth(configs.REDIS_PASSWORD);
 // redis_client.select(configs.REDIS_CHAT_DB, function() { /* ... */ });
 
 redis_client.on("error", function (err) {
@@ -27,35 +27,44 @@ redis_client.on("error", function (err) {
 });
 
 var redis_publisher         = redis.createClient(configs.REDIS_PORT,configs.REDIS_HOST);
-redis_publisher.auth(configs.REDIS_PASSWORD);
+// redis_publisher.auth(configs.REDIS_PASSWORD);
 
 var redis_subscriber        = redis.createClient(configs.REDIS_PORT,configs.REDIS_HOST);
-redis_subscriber.auth(configs.REDIS_PASSWORD);
+// redis_subscriber.auth(configs.REDIS_PASSWORD);
 
 module.exports.listen = function(app) {
     
     io = socketio(app,{
         adapter: redisAdapter({ pubClient: redis_publisher, subClient: redis_subscriber })
     });
-    console.log("tes");
    
     io.on('connection',function(socket){
-        console.log("Sssssssssssssss");
-        // console.log(socket);
-        console.log(socket.id);
-        socket.on('joingroup', ( data,cb ) =>{
-            console.log(data);
+        socket.on('joingroup', ( data,cb ) => {
             userController.checkGroupMember(data , (err , resp ) => {
                 if(err){
                     console.log(err);
-                    return cb({ success : false , errMsg : err });
+                    return cb({ success : false , err : err });
                 }
-                console.log("tesssssssssssss");
+                socket.join(data.gid);
+                // io.to(data.gid).emit("new user joined");
+                return cb({success : true});
             });
         })
-        // handle_initialize(socket);
-       
-    });
 
-    return io;
+        handleMessageReceived(socket);
+    });
+   return io;
+}
+
+var handleMessageReceived = function(socket) {
+
+    socket.on('newmessage',function(data,cb) {
+        userController.addNewMessage( data, (err, resp) => {
+            if(err){
+                return cb({ success : false , err : err });
+            }
+            io.to(data.gid).emit('ev', {data : resp });
+            return cb({success : true});
+        })
+    })
 }

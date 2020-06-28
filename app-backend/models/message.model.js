@@ -16,11 +16,26 @@ const schema = mongoose.Schema({
         required : true
     },
 
-   type : {
+    msg : {
+        type : String,
+    },
+
+    msg_type : {
         type : Number,
         required : true 
-   },
+    },
 
+    is_admin : {
+        type : Boolean,
+        default : false
+    },
+
+    //msg deleted by admin
+    msg_del :{
+        type : Boolean,
+        default : false
+    },
+    
     // active attribute for soft deletion 
     act : {
         type : Boolean,
@@ -37,7 +52,9 @@ schema.statics = {
     MESSAGE_TYPE : {
         TEXT    : 1,           
         IMAGE   : 2,
-        
+        AUDIO   : 3,
+        VIDEO   : 4,
+
     }
 };
 

@@ -11,11 +11,12 @@ router.get('/',function(req, res, next) {
     res.send("user working");
 });
 
-//user login
-router.post('/login',orgController.maindata.signIn);
 
 //join group
 router.post('/joingrp',orgController.maindata.joinGroup);
  
+
+//chat history
+router.post('/chat_his', orgController.maindata.fetchChatHistory);
 
 module.exports = router;

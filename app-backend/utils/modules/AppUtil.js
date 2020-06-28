@@ -1,3 +1,10 @@
+const mongoose = require('mongoose');
+const bv = require('bvalid');
+
+exports.validMongoId = (id) =>{
+    return mongoose.Types.ObjectId.isValid(id)
+}
+
 exports.getIp = (req)=>{
     var ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress);
     if(!ip && (req.socket || req.connection.socket)){

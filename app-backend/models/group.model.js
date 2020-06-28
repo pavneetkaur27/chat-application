@@ -1,11 +1,11 @@
 const mongoose             = require('mongoose');
 
-const model_name = 'inventory';
+const model_name = 'group';
 
 const schema = mongoose.Schema({
 
     //name of group
-    group_nm : {
+    g_name: {
         type        : String,
         required    : true
     },
