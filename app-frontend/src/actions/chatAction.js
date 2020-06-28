@@ -31,10 +31,7 @@ const handleResponseErrorCase1 = (data)=>{
   console.log(data);
   if(data && data.code){
     if(data.code == 401 || data.code == 498){
-      cookies.remove("ou_at",{path : "/"});
       return window.location.replace('/');
-    }else if(data.code == 404 && data.err ==  "Organisation not found"){
-      return window.location.replace('/cmpprofile');
     }
   }
 }
@@ -55,6 +52,7 @@ export const joinGroup = (data) => dispatch => {
   return axios(requestObj).then((response) => {
     stopLoader(dispatch);
     if (response && response.data.success && response.data) {
+      cookies.set('a_id', response.data.data.aid,{ path: '/' }); 
       return response;
     } else {
       return dispatch({
@@ -89,149 +87,38 @@ export const joinGroup = (data) => dispatch => {
 }
 
 
-export const orgLogin = (eml , pass) => dispatch => {
+export const fetchChatHistory = (data) => dispatch => {
   
   var requestObj = {
     method: 'POST',
     data: {
-      eml   : eml,
-      pwd  : pass
+       aid : data.aid,
+       gid : data.gid,
+       lmt : 15,
+       tim : data.tim
     },
-    url: API_ENDPOINT + '/user/login',
-   
+    url: API_ENDPOINT + '/user/chat_his',
   };
-  startLoader(dispatch,1);
+  // startLoader(dispatch,1);
   
   return axios(requestObj).then((response) => {
-    console.log(response);
-    stopLoader(dispatch);
-    if (response && response.data.success && response.data) {
-      if(response.data.data.a_tkn){
-        cookies.set('ou_at', response.data.data.a_tkn,{ path: '/' }); 
-      }
-      return window.location.replace('/');
-     } else {
-      return dispatch({
-        type: "SHOW_NOTIFY", payload: {
-          type: 'error',
-          message: "Something went wrong",
-          dispatch: dispatch
-        }
-      });
-    }
-  })
-  .catch((err) => {
-    stopLoader(dispatch);
-    var err_msg = "Something went wrong";
-    if (err.response && err.response.statusText) {
-      err_msg = err.response.statusText;
-    }
-    if(err.response && err.response.data && err.response.data.err){
-      err_msg = err.response.data.err;
-    }
-    if(err && err.response && err.response.data){
-      handleResponseErrorCase1(err.response.data || {})
-    }
-    return dispatch({
-      type: "SHOW_NOTIFY", payload: {
-        type: 'error',
-        message: err_msg,
-        dispatch: dispatch
-      }
-    });
-  })
-}
-
-//fetching products from backend server
-export const fetchProducts = (data) => dispatch => {
-  
-  var requestObj = {
-    method: 'POST',
-    data: {
-      limit   : 6,
-      pageno  : data.current_page
-    },
-    url: API_ENDPOINT + '/user/ft_products',
-  };
-  axios(requestObj).then((response) => {
     // stopLoader(dispatch);
     if (response && response.data.success && response.data) {
-      console.log("hlo");
-      if(data.current_page == 1){
+      let messages = response.data.data.allmessages.reverse();
+      if(data.previous_msg){
         dispatch({
-            type: "AVAILABLE_PRODUCTS",
-            payload: {
-                products : response.data.data.products,
-                total_products : response.data.data.total_products
-            }
-        });
+          type: "PREVIOUS_MESSAGES", payload: {
+            allmessages : messages
+          }
+         });
       }else{
-        console.log("tes")
-          dispatch({
-              type: "UPDATE_AVAILABLE_PRODUCTS",
-              payload: {
-                  products : response.data.data.products,
-                  total_products : response.data.data.total_products
-              }
-          });
-      }
-    } else {
-      return dispatch({
-        type: "SHOW_NOTIFY", payload: {
-          type: 'error',
-          message: "Something went wrong",
-          dispatch: dispatch
-        }
-      });
-    }
-  })
-  .catch((err) => {
-    // stopLoader(dispatch);
-    var err_msg = "Something went wrong";
-    if (err.response && err.response.statusText) {
-      err_msg = err.response.statusText;
-    }
-    if(err.response && err.response.data && err.response.data.err){
-      err_msg = err.response.data.err;
-    }
-    if(err && err.response && err.response.data){
-      handleResponseErrorCase1(err.response.data || {})
-    }
-      return dispatch({
-      type: "SHOW_NOTIFY", payload: {
-        type: 'error',
-        message: err_msg,
-        dispatch: dispatch
-      }
-    });
-  })
-}
-
-//placing order
-export const placeOrder = (data) => dispatch => {
-  
-  var requestObj = {
-    method: 'POST',
-    data: {
-      prd_id  : data.product_id,
-      quant   : data.quantity
-    },
-    url: API_ENDPOINT + '/user/ad_order',
-    headers: {
-      'x-access-token': cookies.get('ou_at')
-    }
-  };
-  axios(requestObj).then((response) => {
-    // stopLoader(dispatch);
-    if (response && response.data.success && response.data) {
         dispatch({
-            type: "SHOW_NOTIFY",
-            payload: {
-              type: 'success',
-              message: "Added to Cart",
-              dispatch: dispatch
-            }
+          type: "CURRENT_MESSAGES", payload: {
+            allmessages : messages
+          }
         });
+      }
+      return response;
     } else {
       return dispatch({
         type: "SHOW_NOTIFY", payload: {
@@ -243,7 +130,6 @@ export const placeOrder = (data) => dispatch => {
     }
   })
   .catch((err) => {
-    // stopLoader(dispatch);
     var err_msg = "Something went wrong";
     if (err.response && err.response.statusText) {
       err_msg = err.response.statusText;
@@ -254,7 +140,8 @@ export const placeOrder = (data) => dispatch => {
     if(err && err.response && err.response.data){
       handleResponseErrorCase1(err.response.data || {})
     }
-      return dispatch({
+    // stopLoader(dispatch);
+    return dispatch({
       type: "SHOW_NOTIFY", payload: {
         type: 'error',
         message: err_msg,

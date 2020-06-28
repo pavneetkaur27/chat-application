@@ -1,9 +1,8 @@
 import React, { Component } from 'react';
 import {connect} from "react-redux";
 import { Switch, Route,withRouter } from 'react-router-dom';
-import OrganisationLogIn from './orgLogin';
-import JoinGroup from './joinGroup';
-import ChatGroup from './chatGroup';
+import JoinGroup from './JoinGroup';
+import ChatGroup from './ChatGroup';
 import Header from './partials/header';
 import Alert from './shared/Alert';
 import Loader from './shared/Loader';
@@ -11,7 +10,7 @@ import Cookies from 'universal-cookie';
 import bvalid from 'bvalid/lib/bvalid.es';
 const cookies = new Cookies();
 
-class OrgHome extends Component {
+class Home extends Component {
   constructor(props){
     super(props);
     this.state = {
@@ -41,7 +40,6 @@ class OrgHome extends Component {
             <Switch>
                 <Route exact path="/" render={() => <JoinGroup /> }/>
                 <Route exact path="/chatgroup" render={() => <ChatGroup /> }/>
-                <Route exact path="/login" render={() => <OrganisationLogIn /> }/>  
               </Switch>
           </div>
     
@@ -63,12 +61,12 @@ class InvalidPage extends Component {
 
 const mapStateToProps = state => {
   return {
-      loading: state.ordReducer.loading,
-      orgpanel : state.ordReducer
+      loading: state.chatReducer.loading,
+      chatReducer : state.chatReducer
   }
 }
 
 const mapDispatchToProps = {};
 
 
-export default withRouter(connect(mapStateToProps,mapDispatchToProps)(OrgHome))
+export default withRouter(connect(mapStateToProps,mapDispatchToProps)(Home))

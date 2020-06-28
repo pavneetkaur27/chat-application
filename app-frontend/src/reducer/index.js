@@ -1,6 +1,6 @@
 import { combineReducers } from "redux";
-import ordReducer from './orderReducer';
+import chatReducer from './chatReducer';
 
 export default combineReducers({
-    ordReducer
+    chatReducer
 })

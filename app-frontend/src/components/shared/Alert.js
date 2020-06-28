@@ -58,7 +58,7 @@ class Alerts extends Component {
 
 function mapStateToProps(state) {
     return {
-        storedata: state.ordReducer.data
+        storedata: state.chatReducer.data
     }
 }
 

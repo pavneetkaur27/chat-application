@@ -54,15 +54,23 @@ class JoinGroup extends Component {
                 name        : this.state.name,
                 groupname   : this.state.groupname
             }
-            this.props.joinGroup(data);
-            // this.props.history.push({
-            //     pathname : '/chatgroup',
-            //     state    : {
-            //         uname : this.state.name,
-            //         groupname : this.state.groupname
-            //     }
-            // })
-            
+            this.props.joinGroup(data).
+                then(res => {
+                    let resdata = {
+                        uname : this.state.name,
+                        groupname : this.state.groupname,
+                        aid : res.data.data.aid,
+                        gid : res.data.data.gid
+                    }
+                    if(res.data.success && res.data.data.gid){
+                        this.props.history.push({
+                            pathname : '/chatgroup',
+                            state    : {
+                                data : resdata
+                            }
+                        })      
+                    }
+                })
         }
     }
 
