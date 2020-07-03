@@ -40,18 +40,33 @@ module.exports.listen = function(app) {
    
     io.on('connection',function(socket){
         socket.on('joingroup', ( data,cb ) => {
+            data.socket_id = socket.id;
             userController.checkGroupMember(data , (err , resp ) => {
                 if(err){
                     console.log(err);
                     return cb({ success : false , err : err });
                 }
                 socket.join(data.gid);
-                // io.to(data.gid).emit("new user joined");
-                return cb({success : true});
+                console.log(io.sockets.adapter.rooms[data.gid].sockets);
+                let sockets_arr = [];
+                let activeconnections = io.sockets.adapter.rooms[data.gid].sockets;
+                
+                for(var socketid in activeconnections){
+                    sockets_arr.push(socketid);
+                }
+                
+                userController.getActiveGroupUsers(data.gid , sockets_arr , function(err, users){
+                    if(err){
+                        console.log(err);
+                        return cb({ success : false , err : err });
+                    }
+                   io.to(data.gid).emit('aciveusers', {success : true ,data : users });
+                    return cb({success : true});
+                })
             });
         })
-
         handleMessageReceived(socket);
+        handleUserDisconnection(socket);
     });
    return io;
 }
@@ -59,12 +74,25 @@ module.exports.listen = function(app) {
 var handleMessageReceived = function(socket) {
 
     socket.on('newmessage',function(data,cb) {
+        // console.log(socket.rooms);
         userController.addNewMessage( data, (err, resp) => {
             if(err){
                 return cb({ success : false , err : err });
             }
-            io.to(data.gid).emit('ev', {data : resp });
+            io.to(data.gid).emit('ev', { success: true, data : resp });
             return cb({success : true});
         })
     })
+}
+
+var handleUserDisconnection = async function(socket){
+    try{
+        socket.on('disconnect',async  function(reason ){
+            const user = await userController.fetchInactiveUser(socket.id);
+            io.to(user.gid).emit('inactiveuser', { success : true ,data : user });
+        })
+    }catch(err){
+        console.log("error in disconnection " , err );
+        return;
+    }
 }

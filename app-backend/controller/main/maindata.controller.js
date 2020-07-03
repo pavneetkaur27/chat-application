@@ -162,7 +162,7 @@ exports.fetchChatHistory = async function(req,res, next){
     }
 
     try{
-        console.log("tes");
+   
         var message_qstr = {
             createdAt : {$lt : data.tim},
             gid : data.gid,
@@ -195,7 +195,6 @@ exports.fetchChatHistory = async function(req,res, next){
                 aids_arr.push(messages[i].aid+'');
             }
         }
-        console.log(aids_arr);
         var account_qstr = {
             _id : {$in : aids_arr},
             act : true,
@@ -295,7 +294,20 @@ exports.checkGroupMember = async function(data,cb){
                 if(!groupmember){
                     return cb("This account is not a groupmember");
                 }
-                return cb(null,true);
+                if(data.socket_id){
+                    var groupmem_updated_obj = {
+                        socket_id : data.socket_id
+                    }
+                    var [err2, groupmember] = await to(mongo.Model('groupmember').updateOne(grpmem_qstr, 
+                        { $set : groupmem_updated_obj}
+                    )); 
+                   if(err2){
+                        return cb("server_error");
+                    }
+                    return cb(null, true);
+                }else{
+                    return cb("No socket id exists");
+                }
             }
         }
     }catch(err){
@@ -407,6 +419,134 @@ exports.addNewMessage = async function(data,cb){
                 }
             }
         }
+    }catch(err){
+        return {err :err};
+    }
+}
+
+exports.getActiveGroupUsers = async function(gid, sockets ,cb){
+    try{
+
+        let activeusers = [];
+        function invaliParms(msg,flag){
+            msg = msg ? msg : 'invalid_parameters';
+            if(flag){
+                return cb("invalid_parameters",null);
+            }
+            return cb(msg);
+        }
+    
+        if(!utils.util.validMongoId(gid)){
+            return invaliParms();
+        }
+
+        var group_qstr = {
+            _id  : gid,
+            act  : true,
+        }
+        var group_proj = {};
+        var group_option = {};
+
+        var [err1, group] = await to(mongo.Model('group').findOne(group_qstr, group_proj, group_option)); 
+        if(err1){
+            return cb("server_error");
+        }
+    
+        if(!group){
+            return cb("Group doesn't exist");
+        }else{
+            var grpmem_qstr = {
+                gid : gid,
+                socket_id : {$in : sockets},
+                act : true,
+            }
+            var grpmem_proj = {};
+            var grpmem_option = {};
+    
+            var [err1, groupmembers] = await to(mongo.Model('groupmember').find(grpmem_qstr, grpmem_proj, grpmem_option)); 
+            if(err1){
+                return cb("server_error");
+            }
+            
+            if(groupmembers.length ==  0){
+                return cb(null, {
+                    activeusers : activeusers,
+                    success     : true
+                });
+            }
+
+            let accountid_arr = [];
+            let aid_by_socketids = {};
+
+            for(let i = 0 ; i< groupmembers.length;i++){
+                if(accountid_arr.indexOf(groupmembers[i].aid +'') < 0){
+                    accountid_arr.push(groupmembers[i].aid +'');
+                }    
+                if(!aid_by_socketids[groupmembers[i].aid +'']){
+                    aid_by_socketids[groupmembers[i].aid +''] = {};
+                }
+                aid_by_socketids[groupmembers[i].aid +''] = groupmembers[i].socket_id;
+            }
+
+            var account_qstr = {
+                _id : {$in : accountid_arr},
+                act : true,
+            }
+            var account_proj = {name :1};
+            var account_option = { 
+                sort : {
+                    name : 1
+                }
+            };
+            
+            var [err1, users] = await to(mongo.Model('account').find(account_qstr, account_proj, account_option)); 
+            if(err1){
+                return cb("server_error");
+            }
+
+            for(let i = 0 ; i < users.length ; i++){
+                if(aid_by_socketids[users[i]._id+'']){
+                    activeusers.push({
+                        _id : users[i]._id,
+                        name : users[i].name,
+                        socket_id : aid_by_socketids[users[i]._id+'']
+                    })
+                }
+            }
+
+            return cb(null, {
+                activeusers : activeusers,
+                gid : gid,
+                success     : true
+            });
+            
+        }
+    }catch(err){
+        return {err :err};
+    }
+}
+
+exports.fetchInactiveUser = async function(socket_id){
+    try{
+        return new Promise( async (resolve,reject) => {
+            var grpmem_qstr = {
+                socket_id : socket_id,
+                act : true,
+            }
+            var grpmem_proj = {};
+            var grpmem_option = {};
+    
+            var [err1, groupmember] = await to(mongo.Model('groupmember').findOne(grpmem_qstr, grpmem_proj, grpmem_option)); 
+            if(err1){
+                reject("server_error");
+            }
+            
+            if(!groupmember){
+               reject("not valid user");
+            }
+
+            resolve(groupmember);
+        })
     }catch(err){
         return {err :err};
     }
