@@ -103,6 +103,72 @@ export const fetchChatHistory = (data) => dispatch => {
   
   return axios(requestObj).then((response) => {
     // stopLoader(dispatch);
+    console.log(response);
+    if (response && response.data.success && response.data) {
+      let messages = response.data.data.allmessages.reverse();
+      if(data.previous_msg){
+        dispatch({
+          type: "PREVIOUS_MESSAGES", payload: {
+            allmessages : messages
+          }
+         });
+      }else{
+        dispatch({
+          type: "CURRENT_MESSAGES", payload: {
+            allmessages : messages
+          }
+        });
+      }
+      return response;
+    } else {
+      return dispatch({
+        type: "SHOW_NOTIFY", payload: {
+          type: 'error',
+          message: "Something went wrong",
+          dispatch: dispatch
+        }
+      });
+    }
+  })
+  .catch((err) => {
+    var err_msg = "Something went wrong";
+    if (err.response && err.response.statusText) {
+      err_msg = err.response.statusText;
+    }
+    if(err.response && err.response.data && err.response.data.err){
+      err_msg = err.response.data.err;
+    }
+    if(err && err.response && err.response.data){
+      handleResponseErrorCase1(err.response.data || {})
+    }
+    // stopLoader(dispatch);
+    return dispatch({
+      type: "SHOW_NOTIFY", payload: {
+        type: 'error',
+        message: err_msg,
+        dispatch: dispatch
+      }
+    });
+  })
+}
+
+
+export const getActiveUser = (data) => dispatch => {
+  
+  var requestObj = {
+    method: 'POST',
+    data: {
+       aid : data.aid,
+       gid : data.gid,
+       lmt : 15,
+       tim : data.tim
+    },
+    url: API_ENDPOINT + '/user/chat_his',
+  };
+  // startLoader(dispatch,1);
+  
+  return axios(requestObj).then((response) => {
+    // stopLoader(dispatch);
     if (response && response.data.success && response.data) {
       let messages = response.data.data.allmessages.reverse();
       if(data.previous_msg){

@@ -103,3 +103,34 @@ export const messageReceived = (resp) => dispatch =>{
 }
 
   
+
+export const activeUsers = (resp) => dispatch =>{
+  console.log(resp);
+  return new Promise( (resolve, reject) =>{
+    console.log(resp.data);
+    if(resp.data.success){
+      console.log("tes");
+      dispatch({
+        type: "ACTIVE_USERS", 
+        payload: {
+          activeusers : resp.data.activeusers
+        }
+      });
+      resolve(true);
+    }else if(!resp.data.success){
+      var err_msg = "Something went wrong";
+             
+      if(resp.err.err){
+          err_msg = resp.data.err;
+      }
+      return dispatch({
+        type: "SHOW_NOTIFY", payload: {
+          type: 'error',
+          message: err_msg,
+          dispatch: dispatch
+        }
+      });
+    }
+  })
+}
+

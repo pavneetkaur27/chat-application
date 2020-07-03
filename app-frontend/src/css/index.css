@@ -672,7 +672,7 @@ html::-webkit-scrollbar-thumb {
 
 .send-message-container{
     position: absolute;
-    bottom: 0;
+    /* bottom: 0; */
     left: 0;
     height: 64px;
     width: 100%;
@@ -799,7 +799,11 @@ html::-webkit-scrollbar-thumb {
   border-radius: 6px;
 }
 
-  
+.active-user-img{
+    width: 32px;
+    height: 32px;
+}
+
 @media (min-width : 576px){
     .org-login-card-container{
         min-width: 570px;

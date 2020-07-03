@@ -55,6 +55,13 @@ export default function (state = initialState, action) {
                 allmessages : state.allmessages.concat(action.payload.message),
             }
         
+        case "ACTIVE_USERS":
+            return {
+                ...state,
+                activeusers : action.payload.activeusers,
+            }
+        
+
         default:
             return state;
     }
