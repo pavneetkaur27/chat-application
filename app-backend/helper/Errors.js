@@ -31,7 +31,7 @@ var errors = {
 	"mongo_error"												: [500,"Mongo error !"],
 	"invalid_name"												: [800, "Invalid User name"],
 	"invalid_group"												: [801, "Invalid Group name"],
-	
+	"bad_message"											    : [802, "Bad Message"],
 	"invalid_action"											: [400,"The action you are going to perform is invalid or expired"],
 };
 

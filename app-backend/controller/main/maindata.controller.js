@@ -7,7 +7,7 @@ const mongo                 = require('../../services').Mongo;
 const to                    = require('../../services').Utility.to;
 const helper                = require('../../helper');
 const utils					= require('../../utils');
-const WebPurify = require('webpurify');
+const WebPurify             = require('webpurify');
 const configs               = require('../../config/app').server;
 const httpResponse          = helper.HttpResponse;
 const constants             = helper.Constants;
@@ -16,7 +16,7 @@ const sendError 		    = httpResponse.sendError;
 const sendSuccess			= httpResponse.sendSuccess;
 
 const wp = new WebPurify({
-    api_key: '68373530625384ba846d19ebe047bbb9'
+    api_key : configs.WEBPURIFY_API_KEY
     //, endpoint:   'us'  // Optional, available choices: 'eu', 'ap'. Default: 'us'.
     //, enterprise: false // Optional, set to true if you are using the enterprise API, allows SSL
 });
@@ -348,7 +348,7 @@ exports.addNewMessage = async function(data,cb){
             .then(async profanity => {
                 console.log(profanity);
                 if (profanity) {
-                    console.log("erere");
+                    return cb("Bad Message");
                 } else {
 
                 var account_qstr = {
