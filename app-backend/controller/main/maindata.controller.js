@@ -7,6 +7,7 @@ const mongo                 = require('../../services').Mongo;
 const to                    = require('../../services').Utility.to;
 const helper                = require('../../helper');
 const utils					= require('../../utils');
+const WebPurify             = require('webpurify');
 const configs               = require('../../config/app').server;
 const httpResponse          = helper.HttpResponse;
 const constants             = helper.Constants;
@@ -14,7 +15,11 @@ const errorCodes            = helper.Errors;
 const sendError 		    = httpResponse.sendError;
 const sendSuccess			= httpResponse.sendSuccess;
 
-
+const wp = new WebPurify({
+    api_key : configs.WEBPURIFY_API_KEY
+    //, endpoint:   'us'  // Optional, available choices: 'eu', 'ap'. Default: 'us'.
+    //, enterprise: false // Optional, set to true if you are using the enterprise API, allows SSL
+});
 
 exports.joinGroup = async function(req,res,next){
     
@@ -342,86 +347,95 @@ exports.addNewMessage = async function(data,cb){
             return invaliParms();
         }
 
-        var account_qstr = {
-            _id  : data.aid,
-            act  : true,
-        }
-        var account_proj = {};
-        var account_option = {};
-    
-        var [err0, account] = await to(mongo.Model('account').findOne(account_qstr,account_proj,account_option)); 
-        if(err0){
-            return cb("server_error");
-        }
-      
-        if(!account){
-            return cb("Account doesnot exist");
-        }else{
-            
-            var group_qstr = {
-                _id  : data.gid,
-                act  : true,
-            }
-            var group_proj = {};
-            var group_option = {};
-    
-            var [err1, group] = await to(mongo.Model('group').findOne(group_qstr, group_proj, group_option)); 
-            if(err1){
-                return cb("server_error");
-            }
-        
-            if(!group){
-                return cb("Group doesn't exist");
-            }else{
-                var grpmem_qstr = {
-                    aid : data.aid ,
-                    gid : data.gid,
-                    act : true,
+        wp.check(data.msg)
+            .then(async profanity => {
+                console.log(profanity);
+                if (profanity) {
+                    return cb("Bad Message");
+                } else {
+
+                var account_qstr = {
+                    _id  : data.aid,
+                    act  : true,
                 }
-                var grpmem_proj = {};
-                var grpmem_option = {};
-        
-                var [err1, groupmember] = await to(mongo.Model('groupmember').findOne(grpmem_qstr, grpmem_proj, grpmem_option)); 
-                if(err1){
+                var account_proj = {};
+                var account_option = {};
+            
+                var [err0, account] = await to(mongo.Model('account').findOne(account_qstr,account_proj,account_option)); 
+                if(err0){
                     return cb("server_error");
                 }
-
-                if(!groupmember){
-                    return cb("This account is not a groupmember");
-                }
-                
-                if(groupmember.is_blocked){
-                    return cb("User is blocked to message in this group");
+            
+                if(!account){
+                    return cb("Account doesnot exist");
                 }else{
-                    var message_qstr = {
-                        aid : data.aid ,
-                        gid : data.gid,
-                        is_admin : groupmember.is_admin ? groupmember.is_admin : false,
-                        msg_type : 1,                          //text
-                        msg : data.msg,
-                        act : true,
+                     
+                    var group_qstr = {
+                        _id  : data.gid,
+                        act  : true,
                     }
-                    
-                    var [err1, newmessage] = await to(mongo.Model('message').insert(message_qstr)); 
-                   
+                    var group_proj = {};
+                    var group_option = {};
+            
+                    var [err1, group] = await to(mongo.Model('group').findOne(group_qstr, group_proj, group_option)); 
                     if(err1){
                         return cb("server_error");
                     }
-                    
-                    var [err1, msg] = await to(mongo.Model('message').findOne({_id : newmessage._id})); 
-                    
-                    msg.account =  account;
-                    let message = [];
-                    message.push(msg);
+                
+                    if(!group){
+                        return cb("Group doesn't exist");
+                    }else{
+                        var grpmem_qstr = {
+                            aid : data.aid ,
+                            gid : data.gid,
+                            act : true,
+                        }
+                        var grpmem_proj = {is_blocked : 1};
+                        var grpmem_option = {};
+                
+                        var [err1, groupmember] = await to(mongo.Model('groupmember').findOne(grpmem_qstr, grpmem_proj, grpmem_option)); 
+                        if(err1){
+                            return cb("server_error");
+                        }
 
-                    let resp_obj = {
-                        message : message,
-                        success : true
+                        if(!groupmember){
+                            return cb("This account is not a groupmember");
+                        }
+                        
+                        if(groupmember.is_blocked){
+                            return cb("User is blocked to message in this group");
+                        }else{
+                            var message_qstr = {
+                                aid : data.aid ,
+                                gid : data.gid,
+                                is_admin : groupmember.is_admin ? groupmember.is_admin : false,
+                                msg_type : 1,                          //text
+                                msg : data.msg,
+                                act : true,
+                            }
+                            
+                            var [err1, newmessage] = await to(mongo.Model('message').insert(message_qstr)); 
+                        
+                            if(err1){
+                                return cb("server_error");
+                            }
+                            
+                            var [err1, msg] = await to(mongo.Model('message').findOne({_id : newmessage._id})); 
+                            
+                            msg.account =  account;
+                            let message = [];
+                            message.push(msg);
+
+                            let resp_obj = {
+                                message : message,
+                                success : true
+                            }
+                            return cb(null, resp_obj);
+                        }
                     }
-                    return cb(null, resp_obj);
                 }
             }
-        }
+        })
     }catch(err){
         return {err :err};
     }

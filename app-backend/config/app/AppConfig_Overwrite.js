@@ -19,5 +19,6 @@ exports.server = {
     AWS_ACCESS_KEY                          : "AKIAIUKBNUTLJ4XDZAGQ",
     AWS_SECRET_KEY                          : "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",
     AWS_REGION                              : "ap-south-1",
-    S3_BUCKET                               : "pavneet-ckeditor-images"
+    S3_BUCKET                               : "pavneet-ckeditor-images",
+    WEBPURIFY_API_KEY                       : "68373530625384ba846d19ebe047bbb9"
 }

@@ -21,5 +21,6 @@ exports.server = {
     AWS_ACCESS_KEY                          : "",
     AWS_SECRET_KEY                          : "",
     AWS_REGION                              : "",
-    S3_BUCKET                               : ""
+    S3_BUCKET                               : "",
+    WEBPURIFY_API_KEY                       : ""
 }

@@ -76,8 +76,9 @@ var handleMessageReceived = function(socket) {
     socket.on('newmessage',function(data,cb) {
         // console.log(socket.rooms);
         userController.addNewMessage( data, (err, resp) => {
+            console.log(err);
             if(err){
-                return cb({ success : false , err : err });
+               return cb({ success : false , err : err });
             }
             io.to(data.gid).emit('ev', { success: true, data : resp });
             return cb({success : true});
