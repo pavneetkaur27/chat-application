@@ -14,7 +14,7 @@ import ActiveUserIcon from '../assests/ico_active.svg';
 const socket = io(API_ENDPOINT);
 
 const wp = new WebPurify({
-    api_key: '68373530625384ba846d19ebe047bbb9'
+    api_key: ''
     //, endpoint:   'us'  // Optional, available choices: 'eu', 'ap'. Default: 'us'.
     //, enterprise: false // Optional, set to true if you are using the enterprise API, allows SSL
 });
