@@ -94,7 +94,7 @@ function getBlackList(){
 
 
 function checkProfanity() {
-    rL.question("Enter the word to be added in blacklist : ", function(word) {
+    rL.question("Enter the word to check its profanity: ", function(word) {
         if (!word) {
             console.log('\nOops, you need to provide a valid word');
             return addBlackList();
@@ -104,9 +104,14 @@ function checkProfanity() {
             .then(profanity => {
             if (profanity) {
                 console.log('Profanity found!');
+                endScript();
             } else {
                 console.log('Its gud');
+                endScript();
             }
+        }).catch (err => {
+            console.log("ERROR: ", err);
+            endScript();
         });
     })
 }
