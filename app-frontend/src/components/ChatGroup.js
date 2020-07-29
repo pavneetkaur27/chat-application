@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import {connect} from "react-redux";
 import io from "socket.io-client";
+import WebPurify from 'webpurify';
 import { withRouter } from 'react-router';
 import MessageBox from './MessageBox';
 import { fetchChatHistory ,getActiveUser} from '../actions/chatAction';
@@ -11,6 +12,12 @@ import UserIcon from '../assests/profilepic.svg';
 import ActiveUserIcon from '../assests/ico_active.svg';
 
 const socket = io(API_ENDPOINT);
+
+const wp = new WebPurify({
+    api_key: '68373530625384ba846d19ebe047bbb9'
+    //, endpoint:   'us'  // Optional, available choices: 'eu', 'ap'. Default: 'us'.
+    //, enterprise: false // Optional, set to true if you are using the enterprise API, allows SSL
+});
 
 class ChatGroup extends Component {
     constructor(props){
@@ -65,19 +72,31 @@ class ChatGroup extends Component {
     }
 
     sendMessage = (e) =>{
+
         e.preventDefault();
  
-        let data  = {
-            msg : this.state.msg,
-            aid     : this.state.aid,
-            gid     : this.state.gid
-        }
-        this.props.sendMessage(socket, data)
-            .then(res =>{
-                this.setState({
-                    msg : ''
-                })     
-            })
+        // wp.check('bagot')
+        // .then(profanity => {
+        //     console.log(profanity);
+        //     if (profanity) {
+        //         alert("profanity found");
+        //     } else {
+            let data  = {
+                msg : this.state.msg,
+                aid     : this.state.aid,
+                gid     : this.state.gid
+            }
+            this.props.sendMessage(socket, data)
+                .then(res =>{
+                    this.setState({
+                        msg : ''
+                    })     
+                })   
+            // }   
+        // }).catch (err => {
+        //     console.log(err);
+        // });
+     
     }
     
     paneDidMount = (node) => {    
@@ -94,7 +113,7 @@ class ChatGroup extends Component {
             tim     : this.props.chatReducer.allmessages[0].createdAt,
             previous_msg : true
         }
-        if(node.scrollTop == 0){
+        if(node.scrollTop === 0){
             this.setState({showLoading : true})
             this.props.fetchChatHistory(data)
                 .then(res => {
@@ -112,7 +131,7 @@ class ChatGroup extends Component {
         this.props.getActiveUser({gid : this.state.gid});
     }
     render() {
-        console.log(this.props);
+        // console.log(this.props);
         return (
             <div>
                 <div className="chat-box-container" style={{margin: '0 auto', maxWidth: 1167}}>
