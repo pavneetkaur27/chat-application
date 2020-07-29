@@ -83,14 +83,16 @@ exports.joinGroup = async function(req,res,next){
         if(err1){
             return sendError(res,err0,"server_error");
         }
-    
+        
         if(group){
+            group.is_admin = false;
             return addGroupMember(account,group);
         }else{
             mongo.Model('group').insert(group_qstr,function(err2,resp){
                 if(err2){
                     return sendError(res,"server_error","server_error");
                 }
+                resp.is_admin = true;
                 return addGroupMember(account,resp);
             })
         }
@@ -119,6 +121,7 @@ exports.joinGroup = async function(req,res,next){
             });
         }else{
             grpmem_qstr.is_blocked = false;
+            grpmem_qstr.is_admin = group.is_admin;
             mongo.Model('groupmember').insert(grpmem_qstr,function(err2,resp){
                 if(err2){
                     return sendError(res,"server_error","server_error");
@@ -375,7 +378,7 @@ exports.addNewMessage = async function(data,cb){
                     gid : data.gid,
                     act : true,
                 }
-                var grpmem_proj = {is_blocked : 1};
+                var grpmem_proj = {};
                 var grpmem_option = {};
         
                 var [err1, groupmember] = await to(mongo.Model('groupmember').findOne(grpmem_qstr, grpmem_proj, grpmem_option)); 
@@ -393,7 +396,7 @@ exports.addNewMessage = async function(data,cb){
                     var message_qstr = {
                         aid : data.aid ,
                         gid : data.gid,
-                        is_admin : data.isAdmin ? data.isAdmin : false,
+                        is_admin : groupmember.is_admin ? groupmember.is_admin : false,
                         msg_type : 1,                          //text
                         msg : data.msg,
                         act : true,
@@ -477,6 +480,7 @@ exports.getActiveGroupUsers = async function(gid, sockets ,cb){
 
             let accountid_arr = [];
             let aid_by_socketids = {};
+            let admin_aid = null;
 
             for(let i = 0 ; i< groupmembers.length;i++){
                 if(accountid_arr.indexOf(groupmembers[i].aid +'') < 0){
@@ -486,6 +490,9 @@ exports.getActiveGroupUsers = async function(gid, sockets ,cb){
                     aid_by_socketids[groupmembers[i].aid +''] = {};
                 }
                 aid_by_socketids[groupmembers[i].aid +''] = groupmembers[i].socket_id;
+                if(groupmembers[i].is_admin){
+                    admin_aid = groupmembers[i].aid +'';
+                }
             }
 
             var account_qstr = {
@@ -506,11 +513,15 @@ exports.getActiveGroupUsers = async function(gid, sockets ,cb){
 
             for(let i = 0 ; i < users.length ; i++){
                 if(aid_by_socketids[users[i]._id+'']){
-                    activeusers.push({
+                    let user_obj = {
                         _id : users[i]._id,
                         name : users[i].name,
                         socket_id : aid_by_socketids[users[i]._id+'']
-                    })
+                    }
+                    if( ( users[i]._id +'') == admin_aid ){
+                        user_obj.groupadmin = true;
+                    }                   
+                    activeusers.push(user_obj);
                 }
             }
 

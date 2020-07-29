@@ -1,6 +1,6 @@
 const mongoose             = require('mongoose');
 
-const model_name = 'group';
+const model_name = 'groups';
 
 const schema = mongoose.Schema({
 

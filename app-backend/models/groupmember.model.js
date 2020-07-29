@@ -25,6 +25,11 @@ const schema = mongoose.Schema({
         required : true
     },
 
+    is_admin : {
+        type : Boolean,
+        required : false
+    },
+
     // active attribute for soft deletion 
     act : {
         type : Boolean,
