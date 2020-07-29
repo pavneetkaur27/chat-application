@@ -116,5 +116,5 @@ function endScript() {
 }
  
 function connectMongoDb() {
-    return mongoose.connect("mongodb://localhost:27017/coviddata"); 
+    return mongoose.connect("mongodb://localhost:27017/chatdb"); 
 }
