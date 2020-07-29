@@ -3,11 +3,9 @@ import {connect} from "react-redux";
 import { Switch, Route,withRouter } from 'react-router-dom';
 import JoinGroup from './JoinGroup';
 import ChatGroup from './ChatGroup';
-import Header from './partials/header';
 import Alert from './shared/Alert';
 import Loader from './shared/Loader';
 import Cookies from 'universal-cookie';
-import bvalid from 'bvalid/lib/bvalid.es';
 const cookies = new Cookies();
 
 class Home extends Component {
@@ -34,7 +32,6 @@ class Home extends Component {
 
         <Alert/>
                  
-          <Header />
           <div >
             <Loader loading={this.props.loading}/>
             <Switch>

@@ -17,7 +17,7 @@ const MessageBox = (props) => {
             {sentbyself ? 
                 <div className="message-box-section sent-section">
                     <div className="message-sender-name ">
-                        You
+                    You{props.is_admin ? <span className="message-admin">Admin</span>: null}
                     </div>
                     <div className="message-text">
                         {props.msg}
@@ -27,6 +27,7 @@ const MessageBox = (props) => {
                 <div className="message-box-section received-section">
                     <div className="message-sender-name">
                         {props.account ? props.account.name : null}
+                        {props.is_admin ? <span className="message-admin">Admin</span>: null}
                     </div>
                     <div className="message-text">
                         {props.msg}

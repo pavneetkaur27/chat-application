@@ -4,7 +4,7 @@ import io from "socket.io-client";
 import { withRouter } from 'react-router';
 import MessageBox from './MessageBox';
 import { fetchChatHistory ,getActiveUser} from '../actions/chatAction';
-import {joinSocket,sendMessage,messageReceived,activeUsers} from '../actions/socketAction';
+import {joinSocket,sendMessage,messageReceived,activeUsers,inactiveUser} from '../actions/socketAction';
 import {API_ENDPOINT} from '../constants';
 import Loader from './shared/Loader';
 import UserIcon from '../assests/profilepic.svg';
@@ -42,12 +42,15 @@ class ChatGroup extends Component {
             this.props.messageReceived(data);
         });
         socket.on('aciveusers', (data) => {
-            console.log("hlo");
             this.props.activeUsers(data);
         });
+        socket.on('inactiveuser', ( data) =>{
+            this.props.inactiveUser(data,this.props.chatReducer?.activeusers);
+        })
         socket.on('connect_error', (error) => {
             this.props.joinSocket(socket,data);
         });
+       
     }
       
     componentDidUpdate() {
@@ -121,7 +124,7 @@ class ChatGroup extends Component {
                         
                     </div>
                     <div className="row no-padding no-margin">
-                        <div className="col-sm-9 no-padding no-margin">
+                        <div className="col-12 col-sm-9 no-padding no-margin">
                             <div ref={this.paneDidMount}  className="message-container">
                                 {this.state.showLoading ? 
                                     <div className="chat-loader">
@@ -142,21 +145,28 @@ class ChatGroup extends Component {
                             </div>
                             <div className="send-message-container">
                                 <form  onSubmit={this.sendMessage} >
-                                    <input type="text" className="ipt-send-msg" value={this.state.msg} onChange={this.handleMsgChange}></input>
-                                    <button type="submit"  className="btn-send-msg" disabled={this.validateMessageInput()} >Send</button>
+                                    <div className="row no-margin no-padding">
+                                        <div className="col-9 col-lg-10 col-sm-9 no-margin no-padding">
+                                            <input type="text" className="ipt-send-msg" value={this.state.msg} onChange={this.handleMsgChange}></input>
+                                        </div>
+                                        <div className="col-3 col-lg-2 col-sm-3 no-margin no-padding">
+                                            <button type="submit"  className="btn-send-msg" disabled={this.validateMessageInput()} >Send</button>
+                                        </div>
+                                    </div>
                                 </form>
                             </div>
                         </div>
-                        <div className="col-sm-3 no-margin" style={{padding:16}} >
+                        <div className="col-sm-3 no-margin hide-sm" style={{padding:16}} >
                             <div>
                                 
                                 { (!this.props.chatReducer?.activeusers  || this.props.chatReducer?.activeusers.length == 0 )? '' : 
                                     this.props.chatReducer?.activeusers.map( (user) => {
                                         return (
-                                            <div className="active-user-section" style={{margin:'8px 0px'}} key={user._id}>
+                                            <div className="active-user-section" key={user._id}>
                                                 <img alt="*" className="active-user-img"  onClick={this.getActiveUsers} src={UserIcon}></img>
                                                 <span className="active-icon" style={{marginLeft:'-8px'}}><img style={{marginTop:'20px'}} src={ActiveUserIcon}></img></span>             
                                                 <span style={{marginLeft:12}}>{user.name}</span>
+                                                {user.groupadmin ? <span className="message-admin">Admin</span> : null}
                                             </div>
                                         )
                                     })
@@ -177,6 +187,6 @@ const mapStateToProps = state => {
 }
 
 
-const mapDispatchToProps = {joinSocket,sendMessage,fetchChatHistory,messageReceived,getActiveUser,activeUsers};
+const mapDispatchToProps = {joinSocket,sendMessage,fetchChatHistory,messageReceived,getActiveUser,activeUsers,inactiveUser};
 
 export default withRouter(connect( mapStateToProps, mapDispatchToProps)(ChatGroup));

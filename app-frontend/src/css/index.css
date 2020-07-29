@@ -663,10 +663,8 @@ html::-webkit-scrollbar-thumb {
 
 .chat-box-container{
     position: relative;
-    margin-top: 48px!important;
-    /* padding: 32px; */
     background-color: rgb(216, 224, 236);
-    height: calc(100vh - 106px);
+    height: calc(100vh );
 }
 
 
@@ -681,7 +679,7 @@ html::-webkit-scrollbar-thumb {
 }
 
 .ipt-send-msg{
-    width: 85%;
+    width: 100%;
     height: 42px;
     padding: 8px 16px;
     border-radius: 4px;
@@ -689,9 +687,9 @@ html::-webkit-scrollbar-thumb {
 }
 
 .btn-send-msg{
-    width: 13%;
+    width: 100%;
     height: 42px;
-    margin-left: 12px;
+    margin-left: 6px;
     background-color: #212A39;
     font-weight: 600;
     cursor: pointer;
@@ -701,7 +699,7 @@ html::-webkit-scrollbar-thumb {
 }
 
 .message-container{
-    height: calc(100vh - 220px);
+    height: calc(100vh - 112px);
     overflow-y: scroll;
     overflow-x: hidden;
     padding: 16px 24px;
@@ -799,12 +797,39 @@ html::-webkit-scrollbar-thumb {
   border-radius: 6px;
 }
 
+
+.active-user-section{
+    white-space: nowrap;
+    margin:'8px 0px';
+    color: #212A39;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .active-user-img{
     width: 32px;
     height: 32px;
 }
 
+.message-admin{
+    background-color: rgb(226, 11, 11);
+    padding: 2px 4px;
+    margin-left: 4px;
+    border-radius:3px;
+    color: white;
+    font-size: 12px;
+}
+
+
+@media (max-width: 576px){
+    .hide-sm{
+        display: none;
+    }
+}
+
 @media (min-width : 576px){
+
+    
     .org-login-card-container{
         min-width: 570px;
     }

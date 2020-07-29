@@ -4,6 +4,7 @@ import Card from '@material-ui/core/Card';
 import { withRouter } from 'react-router';
 import CardContent from '@material-ui/core/CardContent';
 import Button from '@material-ui/core/Button';
+import Header from './partials/header';
 import Typography from '@material-ui/core/Typography';
 import { joinGroup } from '../actions/chatAction';
 
@@ -78,6 +79,8 @@ class JoinGroup extends Component {
 
         return (
             <div >
+
+                <Header />
                 <Typography className="org-signup-form-heading" gutterBottom>
                    Join chat group
                 </Typography>
