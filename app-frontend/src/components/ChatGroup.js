@@ -6,6 +6,7 @@ import { withRouter } from 'react-router';
 import MessageBox from './MessageBox';
 import { fetchChatHistory ,getActiveUser} from '../actions/chatAction';
 import {joinSocket,sendMessage,messageReceived,activeUsers,inactiveUser} from '../actions/socketAction';
+import { checkProfanity } from '../actions/profanityAction';
 import {API_ENDPOINT} from '../constants';
 import Loader from './shared/Loader';
 import UserIcon from '../assests/profilepic.svg';
@@ -84,21 +85,30 @@ class ChatGroup extends Component {
         //     if (profanity) {
         //         alert("profanity found");
         //     } else {
-            let data  = {
-                msg : this.state.msg,
-                aid     : this.state.aid,
-                gid     : this.state.gid
-            }
-            this.props.sendMessage(socket, data)
-                .then(res =>{
-                    this.setState({
-                        msg : ''
-                    })     
-                })   
-            // }   
-        // }).catch (err => {
-        //     console.log(err);
-        // });
+
+        this.props.checkProfanity(this.state.msg)
+            .then( response => {
+                if (response.data && response.data.status) {
+                    if (response.data.profanity && response.data.profanity.matches && response.data.profanity.matches.length > 0) {
+                        console.log("profanity found");
+                    }else {
+                        let data  = {
+                            msg : this.state.msg,
+                            aid     : this.state.aid,
+                            gid     : this.state.gid
+                        }
+                        this.props.sendMessage(socket, data)
+                            .then(res =>{
+                                this.setState({
+                                    msg : ''
+                                })     
+                            })  
+                    }
+                }
+            }).catch (err => {
+                console.log(err);
+            });
+             
      
     }
     
@@ -206,6 +216,6 @@ const mapStateToProps = state => {
 }
 
 
-const mapDispatchToProps = {joinSocket,sendMessage,fetchChatHistory,messageReceived,getActiveUser,activeUsers,inactiveUser};
+const mapDispatchToProps = {joinSocket,sendMessage,fetchChatHistory,messageReceived,getActiveUser,activeUsers,inactiveUser,checkProfanity};
 
 export default withRouter(connect( mapStateToProps, mapDispatchToProps)(ChatGroup));
