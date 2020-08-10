@@ -347,12 +347,12 @@ exports.addNewMessage = async function(data,cb){
             return invaliParms();
         }
 
-        wp.check(data.msg)
-            .then(async profanity => {
-                console.log(profanity);
-                if (profanity) {
-                    return cb("Bad Message");
-                } else {
+        // wp.check(data.msg)
+        //     .then(async profanity => {
+        //         console.log(profanity);
+        //         if (profanity) {
+        //             return cb("Bad Message");
+        //         } else {
 
                 var account_qstr = {
                     _id  : data.aid,
@@ -434,8 +434,8 @@ exports.addNewMessage = async function(data,cb){
                         }
                     }
                 }
-            }
-        })
+            // }
+        // })
     }catch(err){
         return {err :err};
     }
