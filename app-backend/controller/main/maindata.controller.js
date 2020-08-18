@@ -15,11 +15,11 @@ const errorCodes            = helper.Errors;
 const sendError 		    = httpResponse.sendError;
 const sendSuccess			= httpResponse.sendSuccess;
 
-const wp = new WebPurify({
-    api_key : configs.WEBPURIFY_API_KEY
-    //, endpoint:   'us'  // Optional, available choices: 'eu', 'ap'. Default: 'us'.
-    //, enterprise: false // Optional, set to true if you are using the enterprise API, allows SSL
-});
+// const wp = new WebPurify({
+//     api_key : configs.WEBPURIFY_API_KEY
+//     //, endpoint:   'us'  // Optional, available choices: 'eu', 'ap'. Default: 'us'.
+//     //, enterprise: false // Optional, set to true if you are using the enterprise API, allows SSL
+// });
 
 exports.joinGroup = async function(req,res,next){
     
