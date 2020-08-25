@@ -76,50 +76,5 @@ export const checkProfanity = (message) => dispatch => {
             }
         });
     })
-//   var requestObj = {
-//     method: 'POST',
-//     data: {
-//         name : data.name ,
-//         groupname : data.groupname
-//     },
-//     url: API_ENDPOINT + '/user/joingrp',
-//   };
-//   startLoader(dispatch,1);
-  
-//   return axios(requestObj).then((response) => {
-//     stopLoader(dispatch);
-//     if (response && response.data.success && response.data) {
-//       cookies.set('a_id', response.data.data.aid,{ path: '/' }); 
-//       return response;
-//     } else {
-//       return dispatch({
-//         type: "SHOW_NOTIFY", payload: {
-//           type: 'error',
-//           message: "Something went wrong",
-//           dispatch: dispatch
-//         }
-//       });
-//     }
-//   })
-//   .catch((err) => {
-//     var err_msg = "Something went wrong";
-//     if (err.response && err.response.statusText) {
-//       err_msg = err.response.statusText;
-//     }
-//     if(err.response && err.response.data && err.response.data.err){
-//       err_msg = err.response.data.err;
-//     }
-//     if(err && err.response && err.response.data){
-//       handleResponseErrorCase1(err.response.data || {})
-//     }
-//     stopLoader(dispatch);
-//     return dispatch({
-//       type: "SHOW_NOTIFY", payload: {
-//         type: 'error',
-//         message: err_msg,
-//         dispatch: dispatch
-//       }
-//     });
-//   })
 }
 
