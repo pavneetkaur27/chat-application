@@ -79,6 +79,7 @@ class ChatGroup extends Component {
 
         e.preventDefault();
  
+        // webpurify
         // wp.check('bagot')
         // .then(profanity => {
         //     console.log(profanity);
@@ -86,30 +87,41 @@ class ChatGroup extends Component {
         //         alert("profanity found");
         //     } else {
 
-        this.props.checkProfanity(this.state.msg)
-            .then( response => {
-                if (response.data && response.data.status) {
-                    if (response.data.profanity && response.data.profanity.matches && response.data.profanity.matches.length > 0) {
-                        console.log("profanity found");
-                    }else {
-                        let data  = {
-                            msg : this.state.msg,
-                            aid     : this.state.aid,
-                            gid     : this.state.gid
-                        }
-                        this.props.sendMessage(socket, data)
-                            .then(res =>{
-                                this.setState({
-                                    msg : ''
-                                })     
-                            })  
-                    }
-                }
-            }).catch (err => {
-                console.log(err);
-            });
+        // sightengine
+        //  this.props.checkProfanity(this.state.msg)
+        //     .then( response => {
+        //         if (response.data && response.data.status) {
+        //             if (response.data.profanity && response.data.profanity.matches && response.data.profanity.matches.length > 0) {
+        //                 console.log("profanity found");
+        //             }else {
+        //                 let data  = {
+        //                     msg : this.state.msg,
+        //                     aid     : this.state.aid,
+        //                     gid     : this.state.gid
+        //                 }
+        //                 this.props.sendMessage(socket, data)
+        //                     .then(res =>{
+        //                         this.setState({
+        //                             msg : ''
+        //                         })     
+        //                     })  
+        //             }
+        //         }
+        //     }).catch (err => {
+        //         console.log(err);
+        //     });
              
-     
+        let data  = {
+            msg : this.state.msg,
+            aid     : this.state.aid,
+            gid     : this.state.gid
+        }
+        this.props.sendMessage(socket, data)
+            .then(res =>{
+                this.setState({
+                    msg : ''
+                })     
+            })  
     }
     
     paneDidMount = (node) => {    
