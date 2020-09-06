@@ -121,10 +121,10 @@ function confirmSNSTopicSubscription(subscriptionUrl) {
 }
 
 // unsubscribe subscription from a Topic
-function unSubscribingFromTopic(subscriptionArn) {
+function unSubscribeFromTopic(subscriptionArn) {
     sns.unsubscribe({SubscriptionArn: subscriptionArn}, err => {
         if (err) {
-            console.log("Error: unSubscribingFromTopic", err);
+            console.log("Error: unSubscribeFromTopic", err);
             return err;
         }
         console.log("SNS Topic Unsubscribed");  
@@ -158,6 +158,6 @@ module.exports = {
     getSubscriptionsByTopic,
     createSNSTopicSubscription,
     confirmSNSTopicSubscription,
-    unSubscribingFromTopic,
+    unSubscribeFromTopic,
     publishMessageToSNSTopic
 }
