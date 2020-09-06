@@ -1,5 +1,5 @@
 require('dotenv').config();
-exports.server = {
+exports.config = {
     SERVER_PORT                             : Number(process.env.PORT) || 4080,
     MODE                                    : 'prod',
     MONGO_URL                               : 'mongodb://localhost:27017/chatdb',
@@ -21,6 +21,7 @@ exports.server = {
     AWS_ACCESS_KEY                          : "",
     AWS_SECRET_KEY                          : "",
     AWS_REGION                              : "",
+    AWS_API_VERSION                         : "2010-03-31",
     S3_BUCKET                               : "",
     WEBPURIFY_API_KEY                       : ""
 }

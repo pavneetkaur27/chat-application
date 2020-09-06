@@ -3,7 +3,7 @@ const request 			    = require('request');
 const moment                = require('moment-timezone');
 const readline              = require('readline');
 const WebPurify             = require('webpurify');
-const configs               = require('../config/app').server;
+const configs               = require('../config/app').config;
 
 const wp = new WebPurify({
     api_key: configs.WEBPURIFY_API_KEY

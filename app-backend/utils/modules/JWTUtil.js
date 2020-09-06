@@ -1,7 +1,7 @@
 "use strict";
 const bv  = require('bvalid');
 const jwt = require('jsonwebtoken');
-const sConf = require('../../config/app').server;
+const sConf = require('../../config/app').config;
 function _JWT(){}
 
 function getPrivateKey(pkey){

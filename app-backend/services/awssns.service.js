@@ -1,4 +1,5 @@
 const aws = require('aws-sdk');
+const request = require('request');
 const config = require('../config/app').config;
 
 aws.config.update({
@@ -94,7 +95,7 @@ function createSNSTopicSubscription(topicArn, protocol, endPoint) {
     const params = {
         Protocol: protocol,   // protocol can be any one of these: HTTP, HTTPS, Email, Email-JSON, Amazon SQS, AWS Lambda 
         TopicArn: topicArn,
-        Endpoint: endPoint  // API url, email address etc
+        Endpoint: endPoint  // API url, email address, lambda function arn etc
     };
     sns.subscribe(params, (err, resp) => {
         if (err) {
@@ -106,12 +107,47 @@ function createSNSTopicSubscription(topicArn, protocol, endPoint) {
     })
 }
 
+// confirm subscription for https protocal 
+// if req.header('x-amz-sns-message-type') === 'SubscriptionConfirmation' 
+function confirmSNSTopicSubscription(subscriptionUrl) {
+    request(url, err => {
+        if (err) {
+            console.log("Error: confirmSNSTopicSubscription", err, subscriptionUrl);
+            return err;
+        }
+        console.log("SNS Topic Subscription confirmed", subscriptionUrl);  
+        return;
+    })
+}
 
+// unsubscribe subscription from a Topic
+function unSubscribingFromTopic(subscriptionArn) {
+    sns.unsubscribe({SubscriptionArn: subscriptionArn}, err => {
+        if (err) {
+            console.log("Error: unSubscribingFromTopic", err);
+            return err;
+        }
+        console.log("SNS Topic Unsubscribed");  
+        return;
+    })
+}
 
-// createSNSTopic('new');
+// Publish message to Topic
+function publishMessageToSNSTopic(topicArn, message) {
+    const params = {
+        Message: message, 
+        TopicArn: topicArn
+    };
+    sns.publish(params, (err, resp) => {
+        if (err) {
+            console.log("Error: publishMessageToSNSTopic", err, topicArn);
+            return err;
+        }
+        console.log("Message published to SNS Topic", topicArn, resp);  
+        return resp;
+    })
+}
 
-// getAllSNSTopics();
-// setSNSTopicAttributes('arn:aws:sns:us-east-2:208246506321:hhhh')
 
 module.exports = {
     createSNSTopic,
@@ -120,5 +156,8 @@ module.exports = {
     setSNSTopicAttributes,
     getSNSTopicAttributes,
     getSubscriptionsByTopic,
-    createSNSTopicSubscription
+    createSNSTopicSubscription,
+    confirmSNSTopicSubscription,
+    unSubscribingFromTopic,
+    publishMessageToSNSTopic
 }
